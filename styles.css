@@ -294,10 +294,19 @@ button.secondary:hover {
 .modal {
   position: fixed;
   inset: 0;
-  display: grid;
+  display: none;
   place-items: center;
   background: rgba(0, 0, 0, 0.6);
   padding: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal.open {
+  display: grid;
+  pointer-events: auto;
+  opacity: 1;
 }
 
 .modal__dialog {

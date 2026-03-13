@@ -192,12 +192,15 @@ function scrollMessagesToBottom() {
 
 function openModal(contentHtml) {
   els.modalContent.innerHTML = contentHtml;
+  els.modalOverlay.classList.add("open");
   els.modalOverlay.hidden = false;
+
   const firstInput = els.modalOverlay.querySelector("input, button");
   if (firstInput) firstInput.focus();
 }
 
 function closeModal() {
+  els.modalOverlay.classList.remove("open");
   els.modalOverlay.hidden = true;
   els.modalContent.innerHTML = "";
 }
