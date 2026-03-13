@@ -53,6 +53,8 @@ const els = {
   modalClose: document.getElementById("modalClose"),
   btnCreateChat: document.getElementById("btnCreateChat"),
   btnJoinChat: document.getElementById("btnJoinChat"),
+  btnExportChat: document.getElementById("btnExportChat"),
+  btnImportChat: document.getElementById("btnImportChat"),
   btnToggleSidebar: document.getElementById("btnToggleSidebar"),
   chatView: document.getElementById("chatView"),
 };
@@ -348,6 +350,59 @@ function initEvents() {
       const code = document.getElementById("joinCodeInput").value.trim();
       joinChatByCode(code);
       closeModal();
+    });
+  });
+
+  els.btnExportChat.addEventListener("click", () => {
+    const active = getActiveChat();
+    if (!active) {
+      showToast("Wähle zuerst einen Chat aus.", true);
+      return;
+    }
+
+    const exportPayload = btoa(JSON.stringify(active));
+    openModal(`
+      <h3>Chat exportieren</h3>
+      <p>Kopiere den untenstehenden Text und füge ihn auf einem anderen Gerät wieder ein.</p>
+      <textarea id="exportData" readonly>${exportPayload}</textarea>
+      <button class="primary" id="copyExport">Kopieren</button>
+    `);
+
+    const copyBtn = document.getElementById("copyExport");
+    copyBtn.addEventListener("click", () => {
+      const textarea = document.getElementById("exportData");
+      textarea.select();
+      document.execCommand("copy");
+      showToast("Exportlink kopiert.");
+    });
+  });
+
+  els.btnImportChat.addEventListener("click", () => {
+    openModal(`
+      <h3>Chat importieren</h3>
+      <p>Füge einen zuvor exportierten Chat-String ein.</p>
+      <textarea id="importData" placeholder="Hier einfügen..."></textarea>
+      <button class="primary" id="doImport">Importieren</button>
+    `);
+
+    const importBtn = document.getElementById("doImport");
+    importBtn.addEventListener("click", () => {
+      const value = document.getElementById("importData").value.trim();
+      if (!value) return;
+
+      try {
+        const chat = JSON.parse(atob(value));
+        if (!chat.id || !chat.name) throw new Error("Ungültiges Format");
+
+        state.chats[chat.id] = chat;
+        addChatToList(chat.id);
+        setActiveChat(chat.id);
+        persist();
+        showToast("Chat importiert!");
+        closeModal();
+      } catch (e) {
+        showToast("Ungültiger Import-String.", true);
+      }
     });
   });
 

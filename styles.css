@@ -340,6 +340,15 @@ button.secondary:hover {
   margin-top: 14px;
 }
 
+.modal textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal textarea[readonly] {
+  background: rgba(0, 0, 0, 0.22);
+}
+
 .modal input,
 .modal textarea {
   width: 100%;
