@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Chat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <header class="sidebar__header">
+        <div>
+          <h1>Chats</h1>
+          <p class="subtitle">Einfacher Chat (lokal)</p>
+        </div>
+        <button class="icon-btn" id="btnToggleSidebar" title="Menü ein-/ausblenden">
+          ☰
+        </button>
+      </header>
+
+      <div class="sidebar__actions">
+        <button class="primary" id="btnCreateChat">Neuen Chat erstellen</button>
+        <button class="secondary" id="btnJoinChat">Chat beitreten</button>
+      </div>
+
+      <div class="chat-list" id="chatList" aria-label="Chatliste"></div>
+
+      <footer class="sidebar__footer">
+        <small>Alle Chats werden im Browser gespeichert.</small>
+      </footer>
+    </aside>
+
+    <main class="chat-view" id="chatView">
+      <header class="chat-header" id="chatHeader">
+        <div>
+          <h2 id="chatTitle">Wähle einen Chat</h2>
+          <p class="chat-meta" id="chatMeta">Erstelle oder trete einem Chat bei, um Nachrichten zu sehen.</p>
+        </div>
+      </header>
+
+      <section class="messages" id="messages" aria-live="polite"></section>
+
+      <form class="msg-input" id="messageForm">
+        <input id="messageInput" type="text" placeholder="Nachricht schreiben..." autocomplete="off" required />
+        <button class="primary" type="submit">Senden</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal" id="modalOverlay" hidden>
+    <div class="modal__dialog" role="dialog" aria-modal="true">
+      <button class="modal__close" id="modalClose" title="Schließen">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
