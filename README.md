@@ -22,6 +22,17 @@ Ein kleines, modernes Chat-UI, das vollständig im Browser läuft (ohne Backend)
 3. Aktiviere GitHub Pages in den Repository-Einstellungen (Branch `main`, Ordner `/ (root)`).
 4. Öffne die Seite unter `https://<dein-benutzername>.github.io/<repo-name>/`.
 
+## Aktivieren von mehreren Geräten (Sync)
+
+Damit mehrere Geräte denselben Chat teilen und Nachrichtenaustausch möglich ist, kannst du Firebase nutzen:
+
+1. Erstelle ein Firebase-Projekt unter https://console.firebase.google.com/
+2. Aktiviere die **Realtime Database** (am schnellsten) oder **Firestore**.
+3. Öffne `firebase-config.js` und trage dort deine Firebase-Konfiguration ein (wird dir in der Firebase-Konsole angezeigt).
+4. Lade die Seite neu. Alle Geräte, die dieselbe Chat-ID/Join-Code nutzen, sehen dann dieselben Nachrichten.
+
+> Hinweis: Ohne Firebase funktioniert der Chat weiterhin lokal, aber nur auf dem aktuellen Gerät.
+
 ---
 
 © 2026

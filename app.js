@@ -12,6 +12,35 @@ const storage = {
   },
 };
 
+const firebaseSync = {
+  enabled: false,
+  db: null,
+  init() {
+    if (!window.firebase || !window.FIREBASE_CONFIG) return;
+    try {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      this.db = firebase.database();
+      this.enabled = true;
+      console.log("Firebase-sync aktiviert");
+    } catch (err) {
+      console.warn("Firebase konnte nicht initialisiert werden:", err);
+    }
+  },
+  setChat(chat) {
+    if (!this.enabled) return;
+    this.db.ref(`chats/${chat.id}`).set(chat);
+  },
+  subscribeToChat(chatId, onChange) {
+    if (!this.enabled) return () => {};
+    const ref = this.db.ref(`chats/${chatId}`);
+    ref.on("value", (snap) => {
+      if (!snap.exists()) return;
+      onChange(snap.val());
+    });
+    return () => ref.off();
+  },
+};
+
 const els = {
   chatList: document.getElementById("chatList"),
   chatTitle: document.getElementById("chatTitle"),
@@ -61,10 +90,36 @@ function ensureChatState(chatId) {
   return state.chats[chatId];
 }
 
+let unsubscribeActiveChat = () => {};
+
 function setActiveChat(chatId) {
+  unsubscribeActiveChat();
   state.activeChatId = chatId;
   persist();
   render();
+  subscribeToActiveChat();
+}
+
+function subscribeToActiveChat() {
+  unsubscribeActiveChat();
+  const chat = getActiveChat();
+  if (!chat || !firebaseSync.enabled) return;
+
+  unsubscribeActiveChat = firebaseSync.subscribeToChat(chat.id, (remoteChat) => {
+    // Merge remote changes without overwriting local user messages
+    const local = state.chats[chat.id] || { ...remoteChat };
+    const merged = {
+      ...remoteChat,
+      messages: [...(local.messages || []), ...(remoteChat.messages || [])].reduce((acc, msg) => {
+        if (!acc.find((m) => m.id === msg.id)) acc.push(msg);
+        return acc;
+      }, []),
+    };
+
+    state.chats[chat.id] = merged;
+    persist();
+    renderMessages();
+  });
 }
 
 function addChatToList(chatId) {
@@ -77,16 +132,38 @@ function addChatToList(chatId) {
 function createChat(name) {
   const id = createId();
   const code = createJoinCode();
-  state.chats[id] = { id, name, code, messages: [] };
+  const chat = { id, name, code, messages: [] };
+  state.chats[id] = chat;
   addChatToList(id);
   setActiveChat(id);
   persist();
+  if (firebaseSync.enabled) firebaseSync.setChat(chat);
   showToast(`Chat "${name}" erstellt!`);
 }
 
 function joinChatByCode(code) {
   const match = Object.values(state.chats).find((chat) => chat.code === code.trim().toUpperCase());
   if (!match) {
+    if (firebaseSync.enabled) {
+      // Wenn lokal nicht gefunden, versuche aus Firebase zu laden
+      const fetchRef = firebaseSync.db.ref("chats");
+      fetchRef.orderByChild("code").equalTo(code.trim().toUpperCase()).once("value", (snap) => {
+        const data = snap.val();
+        if (!data) {
+          showToast("Kein Chat mit diesem Code gefunden.", true);
+          return;
+        }
+        const chat = Object.values(data)[0];
+        state.chats[chat.id] = chat;
+        addChatToList(chat.id);
+        setActiveChat(chat.id);
+        persist();
+        subscribeToActiveChat();
+        showToast(`Dem Chat "${chat.name}" beigetreten!`);
+      });
+      return;
+    }
+
     showToast("Kein Chat mit diesem Code gefunden.", true);
     return;
   }
@@ -109,6 +186,7 @@ function addMessage(text) {
 
   chat.messages.push(msg);
   persist();
+  if (firebaseSync.enabled) firebaseSync.setChat(chat);
   renderMessages();
   scrollMessagesToBottom();
 }
@@ -298,6 +376,7 @@ function initEvents() {
 }
 
 function init() {
+  firebaseSync.init();
   initEvents();
 
   // Ensure the active chat is part of the list.
